@@ -1,5 +1,6 @@
 var frameModule = require("ui/frame");
 var colorModule = require("color");
+var utilsModule = require("utils/utils");
 
 var account = {
 	appId: "",
@@ -16,6 +17,13 @@ var user = {
   emailIdentifier: "",
   initialized: false
 }
+
+var aditionalData= {
+  requestSubject: "Feedback from our App",
+  tags: utilsModule.ios.collections.jsArrayToNSArray([]),
+  additionalInfo: "" 
+}
+
 exports.init = function(appId, url, clientId, enableLogging){
     account.appId = appId;
     account.url = url;
@@ -33,6 +41,30 @@ exports.identifyUser = function (name, id, email){
     user.externalIdentifier=id;
     user.emailIdentifier=email;
     user.initialized = true;
+}
+
+exports.setAditionalData = function (requestSubject, tags, additionalInfo){
+    if(typeof requestSubject === 'string'){
+      aditionalData.requestSubject= requestSubject;
+    }
+    if(typeof tags === 'object' && tags instanceof Array){
+        var nsArray; = utilsModule.ios.collections.jsArrayToNSArray(tags);
+        aditionalData.tags= nsArray;
+    }
+    if(typeof additionalInfo === 'string'){
+      aditionalData.additionalInfo= additionalInfo;
+    }
+
+     ZDKRequests.configure(account: ZDKAccount, requestCreationConfig: ZDKRequestCreationConfig){
+		// specify the request subject
+		requestCreationConfig.subject = aditionalData.requestSubject;
+
+		// specify any additional tags desired
+	    requestCreationConfig.tags = aditionalData.tags;
+
+	    // add some custom content to the description
+	    requestCreationConfig.additionalRequestInfo = aditionalData.additionalInfo;
+  }
 }
 
 exports.account = function (){
