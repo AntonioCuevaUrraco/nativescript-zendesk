@@ -17,6 +17,12 @@ var user = {
   initialized: false
 }
 
+var aditionalData= {
+  requestSubject: function() { return "Feedback from our App"; },
+  tags: function() { return new java.util.ArrayList(); },
+  additionalInfo:function() { return ""; } 
+}
+
 exports.init = function(appId, url, clientId, enableLogging){
     account.appId = appId;
     account.url = url;
@@ -35,6 +41,22 @@ exports.identifyUser = function (name, id, email){
     user.externalIdentifier=id;
     user.emailIdentifier=email;
     user.initialized = true;
+}
+
+exports.setAditionalData = function (requestSubject, tags, additionalInfo){
+    if(typeof requestSubject === 'string'){
+      aditionalData.requestSubject= function() { return requestSubject;}
+    }
+    if(typeof tags === 'object' && tags instanceof Array){
+        var androidArray= new java.util.ArrayList();
+        tags.forEach(function(tag) {
+         androidArray.add(tag);
+        });
+        aditionalData.tags= function() { return androidArray; }
+    }
+    if(typeof additionalInfo === 'string'){
+      aditionalData.additionalInfo= function() { return additionalInfo;}
+    }
 }
 
 exports.account = function (){
@@ -133,9 +155,10 @@ function loadAnonUser(){
 
 function getConfig() {
   var SampleFeedbackConfiguration = com.zendesk.sdk.feedback.impl.BaseZendeskFeedbackConfiguration.extend({
-      getRequestSubject: function() {
-          return "Feedback from our App";
-      }
+      getRequestSubject: aditionalData.requestSubject;
+      getTags: aditionalData.tags;
+      getAdditionalInfo: aditionalData.additionalInfo;
+
   });
 
   return new SampleFeedbackConfiguration();
