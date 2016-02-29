@@ -1,21 +1,9 @@
 var frameModule = require("ui/frame");
 var application = require("application");
+var zen = require("./zenmodel-common");
 
-var account = {
-	appId: "",
-	url: "",
-	clientId: "",
-    loggingEnabled: false,
-    initialized: false,
-    anonymous: true
-}
-
-var user = {
-  nameIdentifier: "",
-  externalIdentifier: "",
-  emailIdentifier: "",
-  initialized: false
-}
+var account = zen.account;
+var user = zen.user;
 
 var aditionalData= {
   requestSubject: function() { return "Feedback from our App"; },
@@ -28,6 +16,7 @@ exports.init = function(appId, url, clientId, enableLogging){
     account.url = url;
     account.clientId = clientId;
     account.initialized = true;
+    account.ticketSubject = "App ticket: Android"
 
     if(enableLogging){
         account.loggingEnabled = enableLogging;
@@ -36,11 +25,10 @@ exports.init = function(appId, url, clientId, enableLogging){
     return this;
 }
 
-exports.identifyUser = function (name, id, email){
-    user.nameIdentifier=name;
-    user.externalIdentifier=id;
-    user.emailIdentifier=email;
-    user.initialized = true;
+exports.identifyUser = function (id, name, email){
+    user.id=id;
+    user.name=name;
+    user.email=email;
 }
 
 exports.setAditionalData = function (requestSubject, tags, additionalInfo){
@@ -139,11 +127,11 @@ function notInitialized(){
 }
 
 function loadAnonUser(){
-  if(user.initialized){
+  if(user.isInitalized()){
     var identity = new com.zendesk.sdk.model.access.AnonymousIdentity.Builder()
-    .withNameIdentifier(user.nameIdentifier)
-    .withExternalIdentifier(user.externalIdentifier)
-    .withEmailIdentifier(user.emailIdentifier)
+    .withNameIdentifier(user.name)
+    .withExternalIdentifier(user.id)
+    .withEmailIdentifier(user.email)
     .build();
     com.zendesk.sdk.network.impl.ZendeskConfig.INSTANCE.setIdentity(identity);
   }
@@ -155,9 +143,9 @@ function loadAnonUser(){
 
 function getConfig() {
   var SampleFeedbackConfiguration = com.zendesk.sdk.feedback.impl.BaseZendeskFeedbackConfiguration.extend({
-      getRequestSubject: aditionalData.requestSubject;
-      getTags: aditionalData.tags;
-      getAdditionalInfo: aditionalData.additionalInfo;
+      getRequestSubject: aditionalData.requestSubject,
+      getTags: aditionalData.tags,
+      getAdditionalInfo: aditionalData.additionalInfo
 
   });
 
